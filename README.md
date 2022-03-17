@@ -1,2 +1,2 @@
 # go-gitm
-Go-git Matt
+Gitm Is giT Matt
