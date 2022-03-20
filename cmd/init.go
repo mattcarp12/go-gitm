@@ -6,17 +6,21 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/mattcarp12/go-gitm/gitm"
 	"github.com/spf13/cobra"
 )
+
+var bare *bool
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize the current directory as a new repository",
-	// Args: cobra.ExactArgs(1),
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
-		fmt.Printf("Args: %+v\n", cmd)
+		fmt.Printf("Bare? %t\n", *bare)
+		gitm.Git{}.Init(*bare)
 	},
 }
 
@@ -31,5 +35,6 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	initCmd.Flags().BoolP("bare", "b", false, "Initialize a bare repository")
+	bare = initCmd.Flags().BoolP("bare", "b", false, "Initialize a bare repository")
+
 }
