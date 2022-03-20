@@ -1,26 +1,26 @@
 package gitm
 
 import (
-	"fmt"
 	"os"
 )
 
-type Git struct{}
+type Git struct{
+	Files Files
+}
 
 func (git Git) Init(bare bool) {
-	f := Files{}
-	if f.InRepo() {
+	if git.Files.InRepo() {
 		return
 	}
 
 	// Map that mirrors the basic Git directory structure
 	gitmFileMap := map[string]interface{}{
 		"HEAD": "ref: refs/heads/master\n",
+		"config": "",
 		"objects": map[string]interface{}{}, // empty directory
 		"refs": map[string]interface{}{
 			"heads": map[string]interface{}{},
 		},
-		// TODO -- Write config file
 	}
 
 	// Write files to cwd
@@ -28,15 +28,18 @@ func (git Git) Init(bare bool) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Bare? %t\n", bare)
 	if bare {
-		f.WriteFilesFromMap(gitmFileMap, cwd)
+		git.Files.WriteFilesFromMap(gitmFileMap, cwd)
 	} else {
-		f.WriteFilesFromMap(map[string]interface{}{".gitm": gitmFileMap}, cwd)
+		git.Files.WriteFilesFromMap(map[string]interface{}{".gitm": gitmFileMap}, cwd)
 	}
+	// Finally, write config file
+	WriteConfig(GitmConfig{Bare: bare})
 }
 
-func (git Git) add() {}
+func (git Git) add() {
+
+}
 
 func (git Git) rm() {}
 

@@ -5,8 +5,6 @@ Copyright © 2022 Matt Carpenter <mattcarp88@gmail.com>
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/mattcarp12/go-gitm/gitm"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +17,6 @@ var initCmd = &cobra.Command{
 	Short: "Initialize the current directory as a new repository",
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Bare? %t\n", *bare)
 		gitm.Git{}.Init(*bare)
 	},
 }

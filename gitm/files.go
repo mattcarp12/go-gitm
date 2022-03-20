@@ -15,13 +15,18 @@ func gitmDir(dir string) string {
 	if err != nil {
 		return ""
 	}
-	// check if dir exists
+	// make sure dir exists
 	if stat, err := os.Stat(dir); !os.IsNotExist(err) && stat.IsDir() {
-		// check if dir is root of repo, i.e. contains .gitm dir
+		potentialConfigFile := filepath.Join(dir, "config")
 		potentialGitmDir := filepath.Join(dir, ".gitm")
-		if stat, err := os.Stat(potentialGitmDir); !os.IsNotExist(err) && stat.IsDir() {
+		// check if dir contains config file
+		if stat, err := os.Stat(potentialConfigFile); !os.IsNotExist(err) && stat.Mode().IsRegular() {
+			return dir
+		// check if dir is root of repo, i.e. contains .gitm dir
+		} else if stat, err := os.Stat(potentialGitmDir); !os.IsNotExist(err) && stat.IsDir() {
 			return potentialGitmDir
 		} else if dir != "/" {
+			// If above checks failed, recurse in parent directory (until reach root)
 			return gitmDir(filepath.Clean(filepath.Join(dir, "..")))
 		}
 	}
