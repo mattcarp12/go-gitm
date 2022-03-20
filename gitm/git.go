@@ -2,7 +2,13 @@ package gitm
 
 type Git struct{}
 
-func (git Git) init() {}
+func (git Git) init() {
+	f := Files{}
+	if f.InRepo() {
+		return
+	}
+	
+}
 
 func (git Git) add() {}
 
