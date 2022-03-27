@@ -1,7 +1,7 @@
 package gitm
 
 import (
-	"errors"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -22,7 +22,7 @@ func gitmDir(dir string) string {
 		// check if dir contains config file
 		if stat, err := os.Stat(potentialConfigFile); !os.IsNotExist(err) && stat.Mode().IsRegular() {
 			return dir
-		// check if dir is root of repo, i.e. contains .gitm dir
+			// check if dir is root of repo, i.e. contains .gitm dir
 		} else if stat, err := os.Stat(potentialGitmDir); !os.IsNotExist(err) && stat.IsDir() {
 			return potentialGitmDir
 		} else if dir != "/" {
@@ -62,25 +62,19 @@ func (f Files) AssertInRepo() {
 	}
 }
 
-func (f Files) RepoRoot() (string, error) {
-	if !f.InRepo() {
-		return "", errors.New("not in a repo")
-	} else {
-		return filepath.Clean(filepath.Join(f.GitmPath("."), "..")), nil
-	}
+func (f Files) RepoRoot() string {
+	f.AssertInRepo()
+	return filepath.Clean(filepath.Join(f.GitmPath("."), ".."))
 }
 
 // PathFromRepoRoot returns `path` relative to the repo root
-func (f Files) PathFromRepoRoot(path string) (string, error) {
-	repoRoot, err := f.RepoRoot()
-	if err != nil {
-		return "", err
-	}
+func (f Files) PathFromRepoRoot(path string) string {
+	repoRoot := f.RepoRoot()
 	rel, err := filepath.Rel(repoRoot, path)
 	if err != nil {
-		return "", err
+		log.Fatal("Error: ", err)
 	}
-	return rel, nil
+	return rel
 }
 
 func (f Files) WriteFilesFromMap(tree map[string]interface{}, prefix string) error {
@@ -103,4 +97,31 @@ func (f Files) WriteFilesFromMap(tree map[string]interface{}, prefix string) err
 		}
 	}
 	return nil
+}
+
+func (f Files) EqualsGitm(path string) bool {
+	return f.GitmPath(path) == path
+}
+
+func (f Files) LsRecursive(path string) []string {
+	if !pathExists(path) {
+		return []string{}
+	} else if absPath, _ := filepath.Abs(path); absPath == gitmDir(path) {
+		return []string{}
+	} else if fileExists(path) {
+		log.Print("Found file: ", path)
+		return []string{path}
+	} else if dirExists(path) {
+		log.Print("Found directory: ", path)
+		dirEnt, err := os.ReadDir(path)
+		if err != nil {
+			log.Fatalf("Error: %s", err)
+		}
+		files := []string{}
+		for _, file := range dirEnt {
+			files = append(files, f.LsRecursive(filepath.Join(path, file.Name()))...)
+		}
+		return files
+	}
+	return []string{}
 }

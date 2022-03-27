@@ -41,18 +41,11 @@ func TestRepoRoot(t *testing.T) {
 	// Change working directory
 	os.Chdir(tmp)
 
-	rootDir, _ := Files{}.RepoRoot()
+	rootDir := Files{}.RepoRoot()
 	if rootDir != tmp {
 		t.Errorf("%s != %s", rootDir, tmp)
 	}
 
-	// Test for failure
-	tmp = t.TempDir()
-	os.Chdir(tmp)
-	_, err := Files{}.RepoRoot()
-	if err == nil {
-		t.Errorf("%s should be nil", err)
-	}
 }
 
 func TestWriteFilesFromMap(t *testing.T) {

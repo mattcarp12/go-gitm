@@ -2,6 +2,7 @@ package gitm
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 )
 
@@ -44,6 +45,6 @@ func IsBare() bool {
 
 func AssertNotBare() {
 	if IsBare() {
-		panic("this operation must be run in a work tree")
+		log.Fatal("this operation must be run in a work tree")
 	}
 }

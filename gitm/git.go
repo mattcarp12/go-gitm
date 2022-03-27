@@ -1,13 +1,20 @@
 package gitm
 
 import (
+	"log"
 	"os"
 )
 
-type Git struct{
+type Git struct {
 	Files Files
 }
 
+func check() {
+	Files{}.AssertInRepo()
+	AssertNotBare()
+}
+
+// Init initializes the current directory as a new repository
 func (git Git) Init(bare bool) {
 	if git.Files.InRepo() {
 		return
@@ -15,8 +22,8 @@ func (git Git) Init(bare bool) {
 
 	// Map that mirrors the basic Git directory structure
 	gitmFileMap := map[string]interface{}{
-		"HEAD": "ref: refs/heads/master\n",
-		"config": "",
+		"HEAD":    "ref: refs/heads/master\n",
+		"config":  "",
 		"objects": map[string]interface{}{}, // empty directory
 		"refs": map[string]interface{}{
 			"heads": map[string]interface{}{},
@@ -37,11 +44,24 @@ func (git Git) Init(bare bool) {
 	WriteConfig(GitmConfig{Bare: bare})
 }
 
-func (git Git) add() {
+// Add adds files that match `path` to the index.
+func (git Git) Add(paths []string) {
+	check()
 
+	var addedFiles []string
+	for _, path := range paths {
+		log.Print("Adding ", path)
+		addedFiles = append(addedFiles, Files{}.LsRecursive(path)...)
+	}
+
+	if len(addedFiles) == 0 {
+		log.Fatal("nothing to add")
+	}
+
+	AddFilesToIndex(addedFiles)
 }
 
-func (git Git) rm() {}
+func (git Git) rm(paths []string, recurse bool) {}
 
 func (git Git) commit() {}
 
@@ -62,8 +82,6 @@ func (git Git) pull() {}
 func (git Git) push() {}
 
 func (git Git) clone() {}
-
-func (git Git) updateIndex() {}
 
 func (git Git) writeTree() {}
 
