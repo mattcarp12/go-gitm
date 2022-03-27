@@ -5,18 +5,16 @@ import (
 	"os"
 )
 
-type Git struct {
-	Files Files
-}
+type Git struct{}
 
 func check() {
-	Files{}.AssertInRepo()
+	AssertInRepo()
 	AssertNotBare()
 }
 
 // Init initializes the current directory as a new repository
 func (git Git) Init(bare bool) {
-	if git.Files.InRepo() {
+	if InRepo() {
 		return
 	}
 
@@ -36,9 +34,9 @@ func (git Git) Init(bare bool) {
 		panic(err)
 	}
 	if bare {
-		git.Files.WriteFilesFromMap(gitmFileMap, cwd)
+		WriteFilesFromMap(gitmFileMap, cwd)
 	} else {
-		git.Files.WriteFilesFromMap(map[string]interface{}{".gitm": gitmFileMap}, cwd)
+		WriteFilesFromMap(map[string]interface{}{".gitm": gitmFileMap}, cwd)
 	}
 	// Finally, write config file
 	WriteConfig(GitmConfig{Bare: bare})
@@ -51,7 +49,7 @@ func (git Git) Add(paths []string) {
 	var addedFiles []string
 	for _, path := range paths {
 		log.Print("Adding ", path)
-		addedFiles = append(addedFiles, Files{}.LsRecursive(path)...)
+		addedFiles = append(addedFiles, LsRecursive(path)...)
 	}
 
 	if len(addedFiles) == 0 {
@@ -61,28 +59,60 @@ func (git Git) Add(paths []string) {
 	AddFilesToIndex(addedFiles)
 }
 
-func (git Git) rm(paths []string, recurse bool) {}
+func (git Git) Rm(path string, recurse bool) {
+	check()
 
-func (git Git) commit() {}
+	filesToRm := IndexMatchingFiles(path)
 
-func (git Git) branch() {}
+	// Abort if no files matched `path`
+	if len(filesToRm) == 0 {
+		log.Fatalf("%s did not match any files", path)
 
-func (git Git) checkout() {}
+		// Abort if `path` is a directory and `-r` was not passed.
+	} else if dirExists(path) && !recurse {
+		log.Fatalf("Not removing %s recursively without -r", path)
 
-func (git Git) diff() {}
+	} else {
 
-func (git Git) remote() {}
+		// Get a list of all files that are to be removed and have also
+		// been changed on disk. If this list is not empty then abort.
+		changesToRm := intersection(filesToRm, AddedOrModifiedFiles())
+		if len(changesToRm) > 0 {
+			errMsg := "the following files have changes:\n"
+			for _, changedFile := range changesToRm {
+				errMsg += changedFile + "\n"
+			}
+			log.Fatal(errMsg)
+		
+		// Otherwise, remove the files that match `path`. Delete them
+		// from disk and remove from the index.
+		} else {
+			DeleteFiles(filesToRm)
+			RmFilesFromIndex(filesToRm)
+		}
+	}
+}
 
-func (git Git) fetch() {}
+func (git Git) Commit() {}
 
-func (git Git) merge() {}
+func (git Git) Branch() {}
 
-func (git Git) pull() {}
+func (git Git) Checkout() {}
 
-func (git Git) push() {}
+func (git Git) Diff() {}
 
-func (git Git) clone() {}
+func (git Git) Remote() {}
 
-func (git Git) writeTree() {}
+func (git Git) Fetch() {}
 
-func (git Git) updateRef() {}
+func (git Git) Merge() {}
+
+func (git Git) Pull() {}
+
+func (git Git) Push() {}
+
+func (git Git) Clone() {}
+
+func (git Git) WriteTree() {}
+
+func (git Git) UpdateRef() {}

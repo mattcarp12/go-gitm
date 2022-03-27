@@ -35,7 +35,7 @@ func gitmDir(dir string) string {
 
 // GitmPath returns a string made by concatenating `path` to
 // the absolute path of the `.gitlet` directory of the repo
-func (f Files) GitmPath(path string) string {
+func GitmPath(path string) string {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return ""
@@ -50,34 +50,38 @@ func (f Files) GitmPath(path string) string {
 
 // InRepo returns true of the current working directory
 // is inside a repository
-func (f Files) InRepo() bool {
-	return f.GitmPath("") != ""
+func InRepo() bool {
+	return GitmPath("") != ""
 }
 
 // AssertInRepo panics if the current working directory
 // is not inside a repository
-func (f Files) AssertInRepo() {
-	if !f.InRepo() {
+func AssertInRepo() {
+	if !InRepo() {
 		panic("Not in a gitm repo")
 	}
 }
 
-func (f Files) RepoRoot() string {
-	f.AssertInRepo()
-	return filepath.Clean(filepath.Join(f.GitmPath("."), ".."))
+func RepoRoot() string {
+	AssertInRepo()
+	return filepath.Clean(filepath.Join(GitmPath("."), ".."))
 }
 
 // PathFromRepoRoot returns `path` relative to the repo root
-func (f Files) PathFromRepoRoot(path string) string {
-	repoRoot := f.RepoRoot()
-	rel, err := filepath.Rel(repoRoot, path)
+func PathFromRepoRoot(path string) string {
+	repoRoot := RepoRoot()
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		log.Fatal("Error: ", err)
+	}
+	rel, err := filepath.Rel(repoRoot, absPath)
 	if err != nil {
 		log.Fatal("Error: ", err)
 	}
 	return rel
 }
 
-func (f Files) WriteFilesFromMap(tree map[string]interface{}, prefix string) error {
+func WriteFilesFromMap(tree map[string]interface{}, prefix string) error {
 	for key, value := range tree {
 		path := filepath.Join(prefix, key)
 		switch v := value.(type) {
@@ -93,35 +97,39 @@ func (f Files) WriteFilesFromMap(tree map[string]interface{}, prefix string) err
 			if err != nil {
 				return err
 			}
-			f.WriteFilesFromMap(v, path)
+			WriteFilesFromMap(v, path)
 		}
 	}
 	return nil
 }
 
-func (f Files) EqualsGitm(path string) bool {
-	return f.GitmPath(path) == path
+func EqualsGitm(path string) bool {
+	return GitmPath(path) == path
 }
 
-func (f Files) LsRecursive(path string) []string {
+func LsRecursive(path string) []string {
 	if !pathExists(path) {
 		return []string{}
 	} else if absPath, _ := filepath.Abs(path); absPath == gitmDir(path) {
 		return []string{}
 	} else if fileExists(path) {
-		log.Print("Found file: ", path)
 		return []string{path}
 	} else if dirExists(path) {
-		log.Print("Found directory: ", path)
 		dirEnt, err := os.ReadDir(path)
 		if err != nil {
 			log.Fatalf("Error: %s", err)
 		}
 		files := []string{}
 		for _, file := range dirEnt {
-			files = append(files, f.LsRecursive(filepath.Join(path, file.Name()))...)
+			files = append(files, LsRecursive(filepath.Join(path, file.Name()))...)
 		}
 		return files
 	}
 	return []string{}
+}
+
+func DeleteFiles(paths []string) {
+	for _, path := range paths {
+		os.Remove(path)
+	}
 }

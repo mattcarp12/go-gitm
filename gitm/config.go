@@ -12,8 +12,7 @@ type GitmConfig struct {
 
 // Read reads config from the .gitm/config file
 func ReadConfig() GitmConfig {
-	f := Files{}
-	file, err := os.Open(f.GitmPath("config"))
+	file, err := os.Open(GitmPath("config"))
 	if err != nil {
 		panic(err)
 	}
@@ -27,8 +26,7 @@ func ReadConfig() GitmConfig {
 
 // Write writes (overwrites) to the .gitm/config file
 func WriteConfig(config GitmConfig) {
-	f := Files{}
-	file, err := os.Create(f.GitmPath("config"))
+	file, err := os.Create(GitmPath("config"))
 	if err != nil {
 		panic(err)
 	}

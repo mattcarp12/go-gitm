@@ -7,9 +7,11 @@ import (
 )
 
 func objectsPath() string {
-	return Files{}.GitmPath("objects")
+	return GitmPath("objects")
 }
 
+// WriteObject writes content to the objects database,
+// and returns the hash of the contents
 func WriteObject(content []byte) string {
 	hash := hashBytes(content)
 	path := filepath.Join(objectsPath(), hash)

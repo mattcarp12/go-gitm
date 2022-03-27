@@ -18,18 +18,20 @@ import (
 
 type Index map[string]string
 
+// key returns a key used in the Index object
 func key(path string, stage string) string {
 	return path + "," + stage
 }
 
+// keyPieces splits a key into `path` and `stage`
 func keyPieces(key string) []string {
 	return strings.Split(key, ",")
 }
 
+// ReadIndex reads the index as a map[string]string
 func ReadIndex() Index {
-	f := Files{}
 	i := Index{}
-	indexFilePath := f.GitmPath("index")
+	indexFilePath := GitmPath("index")
 	if !fileExists(indexFilePath) {
 		return i
 	}
@@ -67,10 +69,13 @@ func (i Index) ConflictedPaths() []string {
 	return conflictedPaths
 }
 
+// HasFile returns true if there is an entry for `path`
+// in the index at `stage`
 func (i Index) HasFile(path string, stage string) bool {
 	return i[key(path, stage)] != ""
 }
 
+// IsFileInConflict returns true if the file for `path` is in conflict
 func (i *Index) IsFileInConflict(path string) bool {
 	return i.HasFile(path, "2")
 }
@@ -84,7 +89,7 @@ func (i *Index) WriteRm(path string) {
 	}
 }
 
-// WriteNonConflict sets a non-conflicting index entry fot the file at
+// WriteNonConflict sets a non-conflicting index entry for the file at
 // `path`.  If the file is already in conflict, it is set to no longer
 // be in conflict.
 func (i *Index) WriteNonConflict(path string) {
@@ -92,6 +97,8 @@ func (i *Index) WriteNonConflict(path string) {
 	i.WriteStage(path, "0")
 }
 
+// WriteStage adds the hashed contents of the file at `path`
+// to the index at `path,stage`.
 func (i *Index) WriteStage(path, stage string) {
 	// read contents of file
 	fileBytes, err := os.ReadFile(path)
@@ -101,6 +108,7 @@ func (i *Index) WriteStage(path, stage string) {
 	(*i)[key(path, stage)] = WriteObject(fileBytes)
 }
 
+// Write writes the index to .gitm/index
 func (i *Index) Write() {
 	indexBytes := []byte{}
 	for key, value := range *i {
@@ -112,14 +120,12 @@ func (i *Index) Write() {
 		indexBytes = append(indexBytes, []byte(value)...)
 		indexBytes = append(indexBytes, '\n')
 	}
-	os.WriteFile(Files{}.GitmPath("index"), indexBytes, 0666)
+	os.WriteFile(GitmPath("index"), indexBytes, 0666)
 }
-
 
 // updateIndex adds the contents of the file at `path` to the
 // index, or removes the file from the index
 func (i *Index) updateIndex(path string, add bool) {
-
 	isOnDisk := pathExists(path)
 	isInIndex := i.HasFile(path, "0")
 
@@ -128,8 +134,10 @@ func (i *Index) updateIndex(path string, add bool) {
 	} else if !add && !isOnDisk && isInIndex {
 		// Abort if file being removed is in conflict.
 		// Gitm doesn't support this
-		if (i.IsFileInConflict(path)) {
+		if i.IsFileInConflict(path) {
 			log.Fatal("unsupported")
+
+			// Otherwise, remove from index
 		} else {
 			i.WriteRm(path)
 			return
@@ -148,10 +156,42 @@ func (i *Index) updateIndex(path string, add bool) {
 	}
 }
 
+// Add list of files to the index
 func AddFilesToIndex(files []string) {
 	i := ReadIndex()
 	for _, path := range files {
 		i.updateIndex(path, true)
 	}
 	i.Write()
+}
+
+// Remove list of files from the index
+func RmFilesFromIndex(files []string) {
+	i := ReadIndex()
+	for _, path := range files {
+		i.updateIndex(path, false)
+	}
+	i.Write()
+}
+
+// IndexMatchingFiles returns all the paths in the index that match
+// path, relative to the current directory
+func IndexMatchingFiles(path string) []string {
+	matches := []string{}
+
+	toc := ReadIndex().TOC()
+
+	searchPath := PathFromRepoRoot(path)
+
+	for k := range toc {
+		if strings.HasPrefix(k, searchPath) {
+			// only a match if an exact match (for single file)
+			// or if the next char is a path delimiter (for files in directory)
+			if len(k) == len(searchPath) || k[len(searchPath)] == '/' {
+				matches = append(matches, k)
+			}
+		}
+	}
+
+	return matches
 }

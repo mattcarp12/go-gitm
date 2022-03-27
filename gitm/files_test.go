@@ -41,7 +41,7 @@ func TestRepoRoot(t *testing.T) {
 	// Change working directory
 	os.Chdir(tmp)
 
-	rootDir := Files{}.RepoRoot()
+	rootDir := RepoRoot()
 	if rootDir != tmp {
 		t.Errorf("%s != %s", rootDir, tmp)
 	}
@@ -56,7 +56,7 @@ func TestWriteFilesFromMap(t *testing.T) {
 		},
 	}
 	tmp := t.TempDir()
-	Files{}.WriteFilesFromMap(fileMap, tmp)
+	WriteFilesFromMap(fileMap, tmp)
 	
 	// Check if files were created
 	if stat, err := os.Stat(filepath.Join(tmp, "foo")); os.IsNotExist(err) || !stat.Mode().IsRegular() {

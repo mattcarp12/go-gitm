@@ -52,3 +52,17 @@ func hashBytes(bytes []byte) string {
 	arr := sha1.Sum(bytes)
 	return hex.EncodeToString(arr[:])
 }
+
+func intersection(a, b []string) []string {
+	res := []string{}
+
+	for _, vala := range a {
+		for _, valb := range b {
+			if vala == valb {
+				res = append(res, vala)
+			}
+		}
+	}
+
+	return res
+}
