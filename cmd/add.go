@@ -5,7 +5,7 @@ Copyright © 2022 Matt Carpenter <mattcarp88@gmail.com>
 package cmd
 
 import (
-	"github.com/mattcarp12/go-gitm/gitm"
+	"github.com/mattcarp12/go-gitm/gitm/git"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,7 @@ var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "A brief description of your command",
 	Run: func(cmd *cobra.Command, args []string) {
-		gitm.Git{}.Add(args)
+		git.Add(args)
 	},
 }
 

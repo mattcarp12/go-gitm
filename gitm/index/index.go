@@ -1,9 +1,12 @@
-package gitm
+package index
 
 import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/mattcarp12/go-gitm/gitm/files"
+	"github.com/mattcarp12/go-gitm/gitm/objects"
 )
 
 // Index module
@@ -31,8 +34,8 @@ func keyPieces(key string) []string {
 // ReadIndex reads the index as a map[string]string
 func ReadIndex() Index {
 	i := Index{}
-	indexFilePath := GitmPath("index")
-	if !fileExists(indexFilePath) {
+	indexFilePath := files.GitmPath("index")
+	if !files.FileExists(indexFilePath) {
 		return i
 	}
 	indexBytes, err := os.ReadFile(indexFilePath)
@@ -105,7 +108,7 @@ func (i *Index) WriteStage(path, stage string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	(*i)[key(path, stage)] = WriteObject(fileBytes)
+	(*i)[key(path, stage)] = objects.WriteObject(fileBytes)
 }
 
 // Write writes the index to .gitm/index
@@ -120,16 +123,16 @@ func (i *Index) Write() {
 		indexBytes = append(indexBytes, []byte(value)...)
 		indexBytes = append(indexBytes, '\n')
 	}
-	os.WriteFile(GitmPath("index"), indexBytes, 0666)
+	os.WriteFile(files.GitmPath("index"), indexBytes, 0666)
 }
 
 // updateIndex adds the contents of the file at `path` to the
 // index, or removes the file from the index
 func (i *Index) updateIndex(path string, add bool) {
-	isOnDisk := pathExists(path)
+	isOnDisk := files.PathExists(path)
 	isInIndex := i.HasFile(path, "0")
 
-	if isOnDisk && !fileExists(path) {
+	if isOnDisk && !files.FileExists(path) {
 		log.Fatal("Can't add a directory to the index")
 	} else if !add && !isOnDisk && isInIndex {
 		// Abort if file being removed is in conflict.
@@ -181,7 +184,7 @@ func IndexMatchingFiles(path string) []string {
 
 	toc := ReadIndex().TOC()
 
-	searchPath := PathFromRepoRoot(path)
+	searchPath := files.PathFromRepoRoot(path)
 
 	for k := range toc {
 		if strings.HasPrefix(k, searchPath) {

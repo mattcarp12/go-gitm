@@ -7,7 +7,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/mattcarp12/go-gitm/gitm"
+	"github.com/mattcarp12/go-gitm/gitm/git"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var rmCmd = &cobra.Command{
 		} else if len(args) > 1 {
 			log.Fatal("Only specify a single pathSpec")
 		} else {
-			gitm.Git{}.Rm(args[0], *recurse)
+			git.Rm(args[0], *recurse)
 		}
 	},
 }

@@ -1,4 +1,4 @@
-package gitm
+package status
 
 // listing keeps `lines` (prefixed by `heading`) only if it's nonempty
 func listing(heading string, lines []string) []string {

@@ -1,4 +1,4 @@
-package gitm
+package diff
 
 func AddedOrModifiedFiles() []string {
 	// TODO - Implement this

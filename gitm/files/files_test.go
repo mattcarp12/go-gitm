@@ -1,4 +1,4 @@
-package gitm
+package files
 
 import (
 	"os"

@@ -1,9 +1,11 @@
-package gitm
+package config
 
 import (
 	"encoding/json"
 	"log"
 	"os"
+
+	"github.com/mattcarp12/go-gitm/gitm/files"
 )
 
 type GitmConfig struct {
@@ -12,7 +14,7 @@ type GitmConfig struct {
 
 // Read reads config from the .gitm/config file
 func ReadConfig() GitmConfig {
-	file, err := os.Open(GitmPath("config"))
+	file, err := os.Open(files.GitmPath("config"))
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +28,7 @@ func ReadConfig() GitmConfig {
 
 // Write writes (overwrites) to the .gitm/config file
 func WriteConfig(config GitmConfig) {
-	file, err := os.Create(GitmPath("config"))
+	file, err := os.Create(files.GitmPath("config"))
 	if err != nil {
 		panic(err)
 	}

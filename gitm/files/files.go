@@ -1,4 +1,4 @@
-package gitm
+package files
 
 import (
 	"log"
@@ -108,13 +108,13 @@ func EqualsGitm(path string) bool {
 }
 
 func LsRecursive(path string) []string {
-	if !pathExists(path) {
+	if !PathExists(path) {
 		return []string{}
 	} else if absPath, _ := filepath.Abs(path); absPath == gitmDir(path) {
 		return []string{}
-	} else if fileExists(path) {
+	} else if FileExists(path) {
 		return []string{path}
-	} else if dirExists(path) {
+	} else if DirExists(path) {
 		dirEnt, err := os.ReadDir(path)
 		if err != nil {
 			log.Fatalf("Error: %s", err)

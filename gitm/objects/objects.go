@@ -1,13 +1,15 @@
-package gitm
+package objects
 
 import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/mattcarp12/go-gitm/gitm/files"
 )
 
 func objectsPath() string {
-	return GitmPath("objects")
+	return files.GitmPath("objects")
 }
 
 // WriteObject writes content to the objects database,
@@ -15,7 +17,7 @@ func objectsPath() string {
 func WriteObject(content []byte) string {
 	hash := hashBytes(content)
 	path := filepath.Join(objectsPath(), hash)
-	if fileExists(path) {
+	if files.FileExists(path) {
 		return hash
 	}
 	err := os.WriteFile(path, content, 0644)
