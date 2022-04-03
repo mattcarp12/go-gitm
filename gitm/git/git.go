@@ -10,10 +10,6 @@ func check() {
 	config.AssertNotBare()
 }
 
-func Commit() {}
-
-func Branch() {}
-
 func Checkout() {}
 
 func Diff() {}

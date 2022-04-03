@@ -3,6 +3,7 @@ package files
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -73,5 +74,23 @@ func TestWriteFilesFromMap(t *testing.T) {
 	contents, _ := os.ReadFile(filepath.Join(tmp, "foo"))
 	if string(contents) != "bar" {
 		t.Error("Incorrect contents")
+	}
+}
+
+func TestNestFlatTree(t *testing.T) {
+	flatTree := map[string]string{
+		"foo": "bar",
+		"bar/foobar": "foobar",
+	}
+	nested := NestFlatTree(flatTree)
+	expected := map[string]interface{}{
+		"foo": "bar",
+		"bar": map[string]interface{}{
+			"foobar": "foobar",
+		},
+	}
+		
+	if !reflect.DeepEqual(nested, expected) {
+		t.Errorf("%s != %s", nested, expected)
 	}
 }
