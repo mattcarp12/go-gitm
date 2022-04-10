@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mattcarp12/go-gitm/gitm/files"
 )
@@ -22,7 +23,6 @@ import (
 // - A tag object stores a commit object and a name.
 // - A branch object stores a commit object and a name.
 // - A remote object stores a URL.
-
 
 func objectsPath() string {
 	return files.GitmPath("objects")
@@ -63,6 +63,35 @@ func WriteTree(tree map[string]interface{}) string {
 	return WriteObject([]byte(treeObject.String()))
 }
 
+// **WriteCommit** creates a commit object and writes it to the
+// objects database
+func WriteCommit(treeHash, message string, parentHashes []string) string {
+	var commitObject strings.Builder
+
+	commitObject.WriteString("commit " + treeHash + "\n")
+
+	for _, hash := range parentHashes {
+		commitObject.WriteString("parent " + hash + "\n")
+	}
+
+	timestamp := time.Now().UTC().String()
+	commitObject.WriteString("Date:  " + timestamp + "\n")
+
+	commitObject.WriteString("\n   " + message + "\n")
+
+	return WriteObject([]byte(commitObject.String()))
+}
+
+// TreeHash parses `commit` as a commit and returns the tree
+// it points to
+func TreeHash(commit string) string {
+	if Type(commit) == "commit" {
+		// return strings.Split(commit, " ")[1]
+		return strings.Fields(commit)[1]
+	}
+	return ""
+}
+
 // Exists returns true if the object with the given hash exists
 func Exists(hash string) bool {
 	path := filepath.Join(objectsPath(), hash)
@@ -78,7 +107,13 @@ func Read(hash string) string {
 	return string(content)
 }
 
-func Type(hash string) string {
-	content := Read(hash)
-	return string(content[:8])
+func Type(content string) string {
+	first := strings.Split(content, " ")[0]
+	if first == "commit" || first == "tree" {
+		return first
+	} else if first == "blob" {
+		return "tree"
+	} else {
+		return "blob"
+	}
 }

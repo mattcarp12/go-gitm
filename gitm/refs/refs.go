@@ -16,11 +16,19 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mattcarp12/go-gitm/gitm"
 	"github.com/mattcarp12/go-gitm/gitm/files"
 	"github.com/mattcarp12/go-gitm/gitm/objects"
 )
 
-func isRef(ref string) bool { return false }
+func isRef(ref string) bool {
+	matchHeads, _ := regexp.MatchString("^refs/heads/[A-Za-z-]+$", ref)
+	matchRemotes, _ := regexp.MatchString("^refs/remotes/[A-Za-z-]+/[A-Za-z-]+$", ref)
+	return ref != "" && (
+		gitm.StringIndex([]string{"HEAD", "FETCH_HEAD", "MERGE_HEAD"}, ref) != -1 ||
+		matchHeads ||
+		matchRemotes)
+}
 
 // TerminalRef returns ref to the most specific ref
 func TerminalRef(ref string) string {
@@ -59,7 +67,6 @@ func Hash(refOrHash string) string {
 			}
 			return string(refContents)
 		} else {
-			log.Print("ref does not exist: " + terminalRef)
 			return ""
 		}
 	}
@@ -107,7 +114,11 @@ func writeRef(ref, content string) {
 	}
 }
 
-func rm() {}
+func RM(ref string) {
+	if isRef(ref) {
+		os.Remove(files.GitmPath(ref))
+	}
+}
 
 // RefExists returns true if the qualified ref exists
 func RefExists(qualifiedRef string) bool {
@@ -157,5 +168,26 @@ func UpdateRef(refToUpdate, refToUpdateTo string) {
 	}
 
 	// Otherwise, set the contents of the file at `refToUpdate` to `hash`
-	writeRef(refToUpdate, hash)
+	writeRef(TerminalRef(refToUpdate), hash)
+}
+
+// CommitParentHashes returns the array of commits that would
+// be the parents of the next commit
+func CommitParentHashes() []string {
+	headHash := Hash("HEAD")
+
+	// If the repository is in the middle of a merge, return the
+	// hashes of the two commits to be merged
+	if Hash("MERGE_HEAD") != "" {
+		return []string{headHash, Hash("MERGE_HEAD")}
+	}
+
+	// If this repository has no commits, return an empty string
+	if headHash == "" {
+		return []string{}
+	}
+
+	// Otherwise, return the hash of the commit that `HEAD`
+	// is currently pointing at
+	return []string{headHash}
 }

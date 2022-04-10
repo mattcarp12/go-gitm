@@ -13,3 +13,12 @@ func Intersection(a, b []string) []string {
 
 	return res
 }
+
+func StringIndex(strArr []string, find string) int {
+	for i, str := range strArr {
+		if find == str {
+			return i
+		}
+	}
+	return -1
+}
