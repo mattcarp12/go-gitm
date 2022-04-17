@@ -31,7 +31,7 @@ func objectsPath() string {
 // WriteObject writes content to the objects database,
 // and returns the hash of the contents
 func WriteObject(content []byte) string {
-	hash := hashBytes(content)
+	hash := Hash(content)
 	path := filepath.Join(objectsPath(), hash)
 	if files.FileExists(path) {
 		return hash
@@ -86,7 +86,6 @@ func WriteCommit(treeHash, message string, parentHashes []string) string {
 // it points to
 func TreeHash(commit string) string {
 	if Type(commit) == "commit" {
-		// return strings.Split(commit, " ")[1]
 		return strings.Fields(commit)[1]
 	}
 	return ""
@@ -94,11 +93,16 @@ func TreeHash(commit string) string {
 
 // Exists returns true if the object with the given hash exists
 func Exists(hash string) bool {
+	// TODO - allow for giving only first few characters of hash
 	path := filepath.Join(objectsPath(), hash)
 	return files.FileExists(path)
 }
 
+// Read returns the string content of the file pointed to by `hash`
 func Read(hash string) string {
+	if !Exists(hash) {
+		return ""
+	}
 	path := filepath.Join(objectsPath(), hash)
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -118,14 +122,21 @@ func Type(content string) string {
 	}
 }
 
-func fileTree(hash string) map[string]string {
-	tree := make(map[string]string)
+func fileTree(hash string) map[string]interface{} {
 	contents := Read(hash)
+	if Type(contents) != "tree" {
+		panic("Not a tree")
+	}
+	tree := make(map[string]interface{})
 	for _, line := range strings.Split(contents, "\n") {
-		if strings.HasPrefix(line, "blob ") {
-			tree[strings.Split(line, " ")[1]] = "blob"
-		} else if strings.HasPrefix(line, "tree ") {
-			tree[strings.Split(line, " ")[1]] = "tree"
+		if line == "" {
+			continue
+		}
+		lineTokens := strings.Fields(line)
+		if lineTokens[0] == "tree" {
+			tree[lineTokens[2]] = fileTree(lineTokens[1])
+		} else {
+			tree[lineTokens[2]] = lineTokens[1]
 		}
 	}
 	return tree
@@ -134,5 +145,6 @@ func fileTree(hash string) map[string]string {
 func CommitTOC(hash string) map[string]string {
 	contents := Read(hash)
 	treeHash := TreeHash(contents)
-
+	tree := fileTree(treeHash)
+	return files.FlattenNestedTree(tree)
 }

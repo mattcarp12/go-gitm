@@ -2,7 +2,11 @@ package git
 
 import (
 	"log"
+	"os"
 
+	"github.com/mattcarp12/go-gitm/gitm/diff"
+	"github.com/mattcarp12/go-gitm/gitm/files"
+	"github.com/mattcarp12/go-gitm/gitm/index"
 	"github.com/mattcarp12/go-gitm/gitm/objects"
 	"github.com/mattcarp12/go-gitm/gitm/refs"
 )
@@ -37,6 +41,47 @@ func Checkout(ref string) {
 	// commit to check out. If any files appear in both lists, abort.
 	// This is to prevent the user from overwriting files that have
 	// been changed since the last commit.
+	changedFiles := diff.ChangedFilesCommitWouldOverwrite(toHash)
+	if len(changedFiles) > 0 {
+		log.Println("Aborting: the following files have been changed since the last commit: ")
+		for _, file := range changedFiles {
+			log.Printf("\t%s", file)
+		}
+		return
+	}
 
+	// Perform the checkout
+	err := os.Chdir(files.RepoRoot())
+	if err != nil {
+		log.Fatalf("Aborting: %s", err)
+	}
 
+	// Get the list of differences between the head commit and the
+	// commit to checkout. Write them to the working copy.
+	diff.CommitDiff(refs.Hash("HEAD"), toHash).WriteWorkingCopy()
+
+	// If the ref is in the objects directory, it must be a hash,
+	// so this checkout is detaching the head
+	isDetachingHead := objects.Exists(ref)
+
+	// Write the commit being checked out the `HEAD`. If the head
+	// is being detached, the commit hash is written directly to
+	// `HEAD`. Otherwise, the branch being checked out is written
+	// to `HEAD`.
+	if isDetachingHead {
+		refs.WriteRef("HEAD", toHash)
+	} else {
+		refs.WriteRef("HEAD", "refs: "+refs.ToLocalRef(ref))
+	}
+
+	// Set the index to the contents of the commit being checked out
+	idx := index.TocToIndex(objects.CommitTOC(toHash))
+	(&idx).Write()
+
+	// Report the result of the checkout
+	if isDetachingHead {
+		log.Printf("Note: checking out commit %s\nYou are in detached HEAD state.", toHash)
+	} else {
+		log.Printf("Switched to branch %s", ref)
+	}
 }

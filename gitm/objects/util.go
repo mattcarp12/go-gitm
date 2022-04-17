@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 )
 
-func hashBytes(bytes []byte) string {
+func Hash(bytes []byte) string {
 	arr := sha1.Sum(bytes)
 	return hex.EncodeToString(arr[:])
 }

@@ -30,7 +30,7 @@ func Commit(message string) {
 	}
 
 	// Compare the hash of the tree object at the top of the tree
-	// that was just written witht the hash of the tree object that the
+	// that was just written with the hash of the tree object that the
 	// `HEAD` commit points at. If they are the same, abort because
 	// there is nothing new to commit.
 	headRef := refs.Hash("HEAD")

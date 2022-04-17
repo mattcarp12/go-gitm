@@ -3,10 +3,10 @@ package git
 import (
 	"log"
 
-	"github.com/mattcarp12/go-gitm/gitm"
 	"github.com/mattcarp12/go-gitm/gitm/diff"
 	"github.com/mattcarp12/go-gitm/gitm/files"
 	"github.com/mattcarp12/go-gitm/gitm/index"
+	"github.com/mattcarp12/go-gitm/gitm/util"
 )
 
 func Rm(path string, recurse bool) {
@@ -26,7 +26,7 @@ func Rm(path string, recurse bool) {
 
 		// Get a list of all files that are to be removed and have also
 		// been changed on disk. If this list is not empty then abort.
-		changesToRm := gitm.Intersection(filesToRm, diff.AddedOrModifiedFiles())
+		changesToRm := util.Intersection(filesToRm, diff.AddedOrModifiedFiles())
 		if len(changesToRm) > 0 {
 			errMsg := "the following files have changes:\n"
 			for _, changedFile := range changesToRm {

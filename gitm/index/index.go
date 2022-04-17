@@ -20,7 +20,7 @@ import (
 // See `index.writeConflict()` for more details.
 
 type Index map[string]string
-type TOC map[string]string
+
 
 // key returns a key used in the Index object
 func key(path string, stage string) string {
@@ -52,15 +52,7 @@ func ReadIndex() Index {
 	return i
 }
 
-// TOC returns a map of the contents of the index.  The keys are
-// paths, and the values are the hash of the file at that path.
-func (i Index) TOC() TOC {
-	toc := TOC{}
-	for k := range i {
-		toc[keyPieces(k)[0]] = i[k]
-	}
-	return toc
-}
+
 
 // ConflictedPaths returns a list of paths that are in conflict.
 func (i Index) ConflictedPaths() []string {

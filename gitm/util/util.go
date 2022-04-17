@@ -1,4 +1,4 @@
-package gitm
+package util
 
 func Intersection(a, b []string) []string {
 	res := []string{}
@@ -21,4 +21,20 @@ func StringIndex(strArr []string, find string) int {
 		}
 	}
 	return -1
+}
+
+func Keys(m map[string]string) []string {
+	keys := []string{}
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func Unique(strArr []string) []string {
+	strMap := map[string]string{}
+	for _, str := range strArr {
+		strMap[str] = ""
+	}
+	return Keys(strMap)
 }

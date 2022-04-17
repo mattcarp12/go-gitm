@@ -16,16 +16,15 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mattcarp12/go-gitm/gitm"
 	"github.com/mattcarp12/go-gitm/gitm/files"
 	"github.com/mattcarp12/go-gitm/gitm/objects"
+	"github.com/mattcarp12/go-gitm/gitm/util"
 )
 
 func isRef(ref string) bool {
 	matchHeads, _ := regexp.MatchString("^refs/heads/[A-Za-z-]+$", ref)
 	matchRemotes, _ := regexp.MatchString("^refs/remotes/[A-Za-z-]+/[A-Za-z-]+$", ref)
-	return ref != "" && (
-		gitm.StringIndex([]string{"HEAD", "FETCH_HEAD", "MERGE_HEAD"}, ref) != -1 ||
+	return ref != "" && (util.StringIndex([]string{"HEAD", "FETCH_HEAD", "MERGE_HEAD"}, ref) != -1 ||
 		matchHeads ||
 		matchRemotes)
 }
@@ -39,7 +38,7 @@ func TerminalRef(ref string) string {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return regexp.MustCompile(`ref: (refs/heads/.+)`).FindStringSubmatch(string(headContents))[1]
+		return regexp.MustCompile(`(refs/heads/.+)`).FindStringSubmatch(string(headContents))[1]
 
 		// If ref is qualified, return the ref
 	} else if isRef(ref) {
@@ -108,7 +107,7 @@ func toRemoteRef(remote, name string) string {
 	return "refs/remotes/" + remote + "/" + name
 }
 
-func writeRef(ref, content string) {
+func WriteRef(ref, content string) {
 	if isRef(ref) {
 		os.WriteFile(files.GitmPath(ref), []byte(content), 0644)
 	}
@@ -168,7 +167,7 @@ func UpdateRef(refToUpdate, refToUpdateTo string) {
 	}
 
 	// Otherwise, set the contents of the file at `refToUpdate` to `hash`
-	writeRef(TerminalRef(refToUpdate), hash)
+	WriteRef(TerminalRef(refToUpdate), hash)
 }
 
 // CommitParentHashes returns the array of commits that would
