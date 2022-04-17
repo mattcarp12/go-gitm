@@ -10,8 +10,6 @@ func check() {
 	config.AssertNotBare()
 }
 
-func Checkout() {}
-
 func Diff() {}
 
 func Remote() {}

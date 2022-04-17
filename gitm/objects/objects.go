@@ -117,3 +117,22 @@ func Type(content string) string {
 		return "blob"
 	}
 }
+
+func fileTree(hash string) map[string]string {
+	tree := make(map[string]string)
+	contents := Read(hash)
+	for _, line := range strings.Split(contents, "\n") {
+		if strings.HasPrefix(line, "blob ") {
+			tree[strings.Split(line, " ")[1]] = "blob"
+		} else if strings.HasPrefix(line, "tree ") {
+			tree[strings.Split(line, " ")[1]] = "tree"
+		}
+	}
+	return tree
+}
+
+func CommitTOC(hash string) map[string]string {
+	contents := Read(hash)
+	treeHash := TreeHash(contents)
+
+}
